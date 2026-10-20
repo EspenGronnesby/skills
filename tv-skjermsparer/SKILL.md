@@ -10,6 +10,8 @@ deres egne tema-bilder som videoer med sakte zoom/panorering og myke overganger,
 på Macen de kan redigere og en knapp (`Oppdater TV.command`) som sender endringer til TV-en.
 Valgfritt: raskere TV og mindre sporing/reklame.
 
+Vil brukeren også ha ny forside i Apple TV-stil, en Skjermsparer-knapp på forsiden eller Skjermdeling i Inputs, gjør denne skillen først og deretter skillen **tv-vibehack-forside**.
+
 Brukeren skal ikke gjøre noe teknisk selv utover det som MÅ skje på TV-en (utviklermodus og godkjenning).
 Alt annet gjør du i et skall på brukerens Mac (device_bash eller Desktop Commander `start_process`).
 Snakk enkelt norsk, ett steg om gangen, og fortell hva de skal se etter på TV-skjermen.
@@ -17,10 +19,11 @@ Snakk enkelt norsk, ett steg om gangen, og fortell hva de skal se etter på TV-s
 ## 0. Avklar først (én runde med AskUserQuestion)
 
 1. **TV-merke og system.** Bare Android TV / Google TV støttes (TCL, Sony, Philips, Xiaomi, Hisense med Google TV, Chromecast/Google TV Streamer, Nvidia Shield). Samsung (Tizen) og LG (webOS) støttes ikke: si det rett ut og tilby bare AdGuard DNS for reklame.
-2. **Tema for bildene** (multiSelect): f.eks. biler/superbiler, ekstremsport (kiting/twintip, surf, ski, motocross, wingsuit), natur, verdensrommet, arkitektur, dyr, egne bilder. La dem skrive egne tema/merker/personer under «Other».
+2. **Tema for bildene** (multiSelect): f.eks. biler/superbiler, drift, ekstremsport (kiting/twintip, surf, ski, motocross, wingsuit), natur, verdensrommet, arkitektur, dyr, egne bilder. La dem skrive egne tema/merker/personer under «Other».
 3. **Egne bilder?** Hvis ja: de kan legge dem i mappen etterpå, eller gi deg en mappe på Macen nå.
 4. **Tempo:** standard er 7 sek per bilde + 2 sek overgang (det testbrukeren likte best). 12 sek ble opplevd som for lenge.
-5. **Raskere TV / mindre reklame?** (valgfritt, se steg 6). Spør hvilke forhåndsinstallerte apper de IKKE bruker.
+5. **Når skjermspareren skal starte:** testbrukeren ville ha 1 minutt uten aktivitet.
+6. **Raskere TV / mindre reklame?** (valgfritt, se steg 6). Spør hvilke forhåndsinstallerte apper de IKKE bruker.
 
 Ukjente navn (f.eks. en person eller et merke du ikke finner): søk én gang, spør så brukeren om lenke/Instagram-navn. Ikke gjett.
 
@@ -35,7 +38,7 @@ python3 -c "import PIL" 2>/dev/null || pip3 install --user pillow
 adb version   # MÅ gi versjon. «no such file or directory» = ødelagt symlink -> brew reinstall --cask android-platform-tools
 ```
 
-Alle hjelpefiler legges i `~/tv-skjermsparer-verktoy/` (lag mappen).
+Alle hjelpefiler legges i `~/tv-skjermsparer-verktoy/` (lag mappen). **zsh:** en variabel med flere ord blir ikke delt opp. Bruk arrays (`PKGS=(a b c)`) og funksjoner, ikke `CMD="adb -s x shell"; $CMD`.
 
 ## 2. TV: utviklermodus (brukeren gjør dette, du guider)
 
@@ -77,7 +80,7 @@ while True:
     threading.Thread(target=pipe,args=(t,c),daemon=True).start()
 ```
 
-Start den i bakgrunnen (`nohup python3 ~/tv-skjermsparer-verktoy/fwd.py <IP> >/dev/null 2>&1 &`). Alle adb-kall bruker deretter `export ANDROID_SERIAL=127.0.0.1:5556`.
+Start den i bakgrunnen (`nohup python3 ~/tv-skjermsparer-verktoy/fwd.py <IP> >/dev/null 2>&1 &`). Alle adb-kall bruker deretter `export ANDROID_SERIAL=127.0.0.1:5556`. Har forbindelsen stått lenge og adb svarer «error: closed», kjør `adb disconnect; adb connect 127.0.0.1:5556`.
 
 **Godkjenning, gjør det én gang og rent:**
 ```zsh
@@ -93,10 +96,12 @@ URL=$(curl -sL https://api.github.com/repos/theothernt/AerialViews/releases/late
 curl -sL -o aerialviews.apk "$URL" && adb install -r aerialviews.apk
 adb shell pm grant com.neilturner.aerialviews android.permission.READ_EXTERNAL_STORAGE
 adb shell settings put secure screensaver_components com.neilturner.aerialviews/.ui.screensaver.DreamActivity
-adb shell appops set com.neilturner.aerialviews APP_AUTO_START allow   # TCL (Android TV 14+: AUTO_START)
-adb shell settings get system screen_off_timeout   # må være >= 360000; under 6 min starter ikke skjermspareren. Endre ikke ellers.
+adb shell appops set com.neilturner.aerialviews APP_AUTO_START allow   # TCL (Android TV 14+: AUTO_START). Uten denne starter skjermspareren aldri.
+adb shell settings put system screen_off_timeout <ms>   # brukerens valg; 60000 (1 min) er testet og virker på TCL G10
 ```
-Test aldri med kort timeout eller `Somnambulator`, det virker ikke på Google TV. Test med appens egen knapp (under).
+Aerial Views' README sier at verdier under 6 min ikke virker. På TCL G10 / Google TV 12 stemte ikke det: 1 min virket. Det som manglet i første forsøk var APP_AUTO_START. Sjekk på hver TV: sett verdien, ikke rør noe, vent litt lenger enn tiden, og se etter `dumpsys dreams | grep mCurrentDreamName`.
+
+Etter appops-kommandoen kan skjermspareren startes direkte med `adb shell am start -n com.android.systemui/.Somnambulator`. Det er nyttig for test og for en Skjermsparer-knapp.
 
 ### Konfigurer appen via fjernkontroll-kommandoer
 
@@ -108,7 +113,7 @@ for k in "$@"; do adb shell input keyevent $k; sleep 0.6; done
 sleep 1.2; adb exec-out screencap -p > ~/tv-skjermsparer-verktoy/s.png; sips -Z 1280 ~/tv-skjermsparer-verktoy/s.png >/dev/null
 ```
 Start alltid fra hovedmenyen: `adb shell am force-stop com.neilturner.aerialviews; adb shell am start -n com.neilturner.aerialviews/.ui.MainActivity`.
-Hovedmeny: 0 Media Sources, 1 Settings, 2 Test screensaver settings. Se på skjermbildet etter hvert steg og bekreft før du går videre.
+Hovedmeny: 0 Media Sources, 1 Settings, 2 Test screensaver settings. Se på skjermbildet etter hvert steg og bekreft før du går videre. Et tomt skjermbilde (0 byte) betyr at TV-en viser Live TV/HDMI: trykk HOME.
 
 Dette må ende slik:
 - **Media Sources:** alle fire nettkilder AV. Apple, Amazon og to «community»-kilder (Jetson, Robin Fourcade) står PÅ fra start, og glemmer du én kommer naturvideoer tilbake. Sjekk alle fire bryterne på skjermbildet.
@@ -120,12 +125,14 @@ Dette må ende slik:
 ## 5. Bilder, mappe og videoer
 
 ### Hent bilder (når brukeren vil ha tema-bilder)
-Unsplash/Pexels krever nøkkel, så bruk Wikimedia Commons API (frie lisenser). Liggende JPEG ≥2000 px bredt, bredde/høyde 1,3–1,9, 3–6 per søkeord, `time.sleep(4)` mellom søk (ellers HTTP 429), og en User-Agent-header. Gode søk: spesifikke modeller/aktiviteter ("Porsche 918 Spyder", "kitesurfing", "big wave surfing", "wingsuit flying").
+Unsplash/Pexels krever nøkkel, så bruk Wikimedia Commons API (frie lisenser). Liggende JPEG ≥2000 px bredt (≥1800 for smale tema), bredde/høyde 1,3–1,9, 3–6 per søkeord, `time.sleep(4)` mellom søk (ellers HTTP 429), og en User-Agent-header. Gode søk: spesifikke modeller/aktiviteter ("Porsche 918 Spyder", "kitesurfing", "Formula Drift", "wingsuit flying").
 
-**Kvalitetssjekk:** lag kontaktark med Pillow (nummererte miniatyrer), se på det, og slett nærbilder, interiør, duplikater, svart-hvitt/gamle bilder, bittesmå motiver og bilder som ikke matcher temaet. Gi gjerne beholdte filer norske, beskrivende navn.
+**Kvalitetssjekk:** lag kontaktark med Pillow (nummererte miniatyrer), se på det, og slett nærbilder, interiør, utstillings- og verkstedbilder, duplikater, svart-hvitt/gamle bilder, bittesmå motiver og bilder som ikke matcher temaet. Gi gjerne beholdte filer norske, beskrivende navn.
+
+**Vær ærlig om smale ønsker.** En bestemt ombygd bilmodell, en person eller en Instagram-konto finnes som regel ikke med fri lisens. Si hva du fant og hva som mangler, ikke last ned opphavsrettsbeskyttede bilder fra Instagram/Pinterest, og forklar at brukeren selv kan lagre bilder de liker i mappen til eget bruk.
 
 ### Mappen brukeren redigerer
-`~/Desktop/Privat/TV-skjermsparer/` hvis `Privat/` finnes, ellers `~/Desktop/TV-skjermsparer/`. Én undermappe per tema (Biler, Ekstremsport, Egne ...), pluss `LES MEG.txt` og `Oppdater TV.command`. Slett aldri brukerens egne filer.
+`~/Desktop/Privat/TV-skjermsparer/` hvis `Privat/` finnes, ellers `~/Desktop/TV-skjermsparer/`. Én undermappe per tema (Biler, Ekstremsport, Drift, Egne ...), pluss `LES MEG.txt` og `Oppdater TV.command`. Slett aldri brukerens egne filer. Sier brukeren at slettede bilder fortsatt vises, kjør Oppdater TV.
 
 ### Videogenerator (jevn bevegelse er avgjørende)
 Zoompan i 1080p hakker. Skaler til 4x, kjør zoompan til 2x og skaler ned med lanczos. Det ga jevn bevegelse i test.
@@ -172,7 +179,7 @@ for g, grp in enumerate(groups):
     print(f"video {g+1}/{len(groups)}", flush=True)
 shutil.rmtree(tmp); print("ferdig:", OUT)
 ```
-Videoene deles i grupper på 8, så skjermspareren kan stokke dem og ikke starter likt hver gang. Juster SHOW/FADE etter brukerens tempo-svar. Ca. 9 sek rendering per bilde på Apple Silicon.
+Videoene deles i grupper på 8, så skjermspareren kan stokke dem og ikke starter likt hver gang. Juster SHOW/FADE etter brukerens tempo-svar. Ca. 9 sek rendering per bilde på Apple Silicon (75 bilder ≈ 10 min). Kjører du Oppdater-knappen fra skallet ditt, poll `~/tv-skjermsparer-verktoy/videoer` for fremdrift og gi brukeren en statuslinje hvis de spør.
 
 ### Oppdater-knappen
 `Oppdater TV.command` i brukerens mappe (`chmod +x`). Fyll inn TV-IP:
@@ -186,7 +193,7 @@ echo "Lager videoer av bildene (tar noen minutter)..."
 rm -rf "$UT"; python3 "$V/lag_video.py" "$MAPPE" "$UT" || { echo "Feil under videolaging."; read -k1; exit 1; }
 echo "Kobler til TV-en..."
 pgrep -f "$V/fwd.py" >/dev/null || (nohup python3 "$V/fwd.py" "$TV_IP" >/dev/null 2>&1 &)
-sleep 1; adb connect "$SERIAL" >/dev/null; sleep 2
+sleep 1; adb disconnect >/dev/null 2>&1; adb connect "$SERIAL" >/dev/null; sleep 2
 adb -s "$SERIAL" get-state >/dev/null 2>&1 || { echo "Fikk ikke kontakt med TV-en (på, samme Wi-Fi?)."; read -k1; exit 1; }
 echo "Sender til TV-en..."
 adb -s "$SERIAL" shell rm -rf /sdcard/Pictures/Skjermsparer
@@ -201,7 +208,7 @@ Uten media-scan-broadcasten finner skjermspareren 0 filer. Kjør knappen selv f�
 `LES MEG.txt`: legg bilder i undermappene (nye mapper blir også med) → dobbeltklikk Oppdater TV → vent ca. 10 min til det står Ferdig. Liggende bilder ser best ut. Første gang kan macOS spørre om Terminal får bruke lokalnettet: svar ja.
 
 ### Verifiser
-Start appens testknapp (hovedmeny → DPAD_DOWN ×2 → DPAD_CENTER). Video vises som svart i `screencap`, så spør brukeren med AskUserQuestion hva de ser (bilder som beveger seg og glir over / hakker / natur / svart). Natur = en nettkilde står fortsatt på. Hakking = 4x-oppskaleringen mangler. Avslutt med BACK og HOME.
+Start med `am start -n com.android.systemui/.Somnambulator` eller appens testknapp (hovedmeny → DPAD_DOWN ×2 → DPAD_CENTER). Video vises som svart i `screencap`, så spør brukeren med AskUserQuestion hva de ser (bilder som beveger seg og glir over / hakker / natur / svart). Natur = en nettkilde står fortsatt på. Hakking = 4x-oppskaleringen mangler. Avslutt med BACK og HOME.
 
 ## 6. Valgfritt: raskere TV og mindre reklame (forsiden skal se lik ut)
 
@@ -211,11 +218,11 @@ Start appens testknapp (hovedmeny → DPAD_DOWN ×2 → DPAD_CENTER). Video vise
 - Ikke rør: launcher (`launcherx`), Play Store, GMS, Chromecast (`mediashell`), AirPlay/Miracast, `com.tcl.tv`, `tvinput`, `systemserver`, `guard`, `dashboard`, `katniss` (stemme), `com.tcl.ttvs` (TCLs firmware-oppdatering).
 - Animasjoner 0.5: `settings put global window_animation_scale 0.5` (+ `transition_animation_scale`, `animator_duration_scale`).
 - Reklameblokk: `settings put global private_dns_mode hostname` og `settings put global private_dns_specifier dns.adguard-dns.com`. Verifiser med `adb shell ping -c1 doubleclick.net` (skal gi 127.0.0.1/0.0.0.0) og at google.com svarer.
-- Vær ærlig: Googles «Sponsored»-felt og det store banneret på forsiden kan ikke fjernes uten å bytte launcher. Bakgrunnsfarge kan heller ikke endres på Google TV-forsiden.
+- Vær ærlig: Googles «Sponsored»-felt og det store banneret på forsiden kan ikke fjernes uten å bytte forside (se **tv-vibehack-forside**). Bakgrunnsfarge kan heller ikke endres på Google TV-forsiden.
 
 ## 7. Avslutt
 
 - Omstart: `adb reboot` henger via videresendingen. Kjør den i bakgrunnen, vent 70 sek til port 5555 svarer, og koble til på nytt (godkjenningen huskes).
 - Etter omstart: sjekk at `screensaver_components`, `private_dns_specifier`, `screen_off_timeout` og antall deaktiverte pakker sitter.
 - Stopp videresendingen (`pkill -f fwd.py`) og `adb disconnect`.
-- Kort oppsummering til brukeren: hva skjermspareren viser, tempo, hvor mappen ligger og hvordan knappen brukes, hva som ble slått av (og at alt kan reverseres), og hva som ikke lot seg gjøre.
+- Kort oppsummering til brukeren: hva skjermspareren viser, tempo, når den starter, hvor mappen ligger og hvordan knappen brukes, hva som ble slått av (og at alt kan reverseres), og hva som ikke lot seg gjøre.
