@@ -59,9 +59,16 @@ Alle hjelpefiler legges i `~/tv-skjermsparer-verktoy/` (lag mappen). **zsh:** en
 
 ## 2. TV: utviklermodus (brukeren gjør dette, du guider)
 
-1. Innstillinger → System → Om.
-2. Trykk 7 ganger på **«Android TV OS-build»** (den lange koden). IKKE «Android TV OS-versjon»: det åpner bare en stor klokke (påskeegg). Si dette på forhånd.
-3. Tilbake → System → **Utvikleralternativer** → slå på **USB-feilsøking**.
+Her går folk oftest feil. I Om-menyen ligger to linjer som ligner: «Android TV OS-versjon» (et kort tall, f.eks. 12) og «Android TV OS-build» (en lang kode med bokstaver og tall, f.eks. STT2.230203.001). Trykk på versjon åpner bare en stor klokke. Navnene varierer mellom merker, så beskriv linjen, ikke bare navnet. Send denne meldingen ordrett:
+
+«1. Gå til Innstillinger → System → Om.
+2. Finn linjen med en lang kode med bokstaver og tall. Den heter ofte «Android TV OS-build» eller «Build». Ikke linjen med et kort tall.
+3. Trykk OK på den 7 ganger. Etter noen trykk står det «Du er nå X trinn unna». Fortsett til det står at du er utvikler.
+4. Kommer det en stor klokke, trykk Tilbake og prøv linjen under.
+5. Gå tilbake til System → Utvikleralternativer, og slå på USB-feilsøking.
+Står du fast, ta et bilde av TV-skjermen med mobilen og send det hit.»
+
+Står det allerede at de er utvikler, hopper de til punkt 5. Mens brukeren holder på, skanner du etter port 5555 hvert 5. sekund (steg 3). Porten åpner seg når USB-feilsøking er på. Si da selv «Jeg ser TV-en nå», uten å vente på at brukeren sier fra. Svarer ingen etter 3 minutter, be om et bilde av skjermen.
 
 ## 3. Finn TV-en og koble til
 
