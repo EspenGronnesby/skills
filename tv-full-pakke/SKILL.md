@@ -16,73 +16,75 @@ Les begge SKILL.md før du starter, og følg dem for detaljene. Spørsmålene i 
 Krav: Mac, Android TV / Google TV (ikke Samsung eller LG), Claude koblet til Macen, TV og Mac på samme Wi-Fi. Det tar ca. 1–1,5 time, mest venting på videoer og bygging.
 
 ## 0. Spørsmålene: still dem ORDRETT, hver gang
-Alle brukere skal få de samme spørsmålene. Bruk AskUserQuestion med nøyaktig denne teksten, disse alternativene og denne rekkefølgen. Ikke legg til, fjern eller omformuler. «Other» (skriv selv) kommer automatisk. Hopp bare over spørsmål som er merket betinget.
+Alle brukere skal få de samme, korte spørsmålene. Bruk AskUserQuestion med nøyaktig denne teksten. Format per alternativ: **label** — beskrivelse (beskrivelsen legges i `description`). Ikke legg til, fjern eller omformuler. «Other» (skriv selv) kommer automatisk. Hopp bare over spørsmål som er merket betinget.
 
 ### Runde 1 (ett AskUserQuestion-kall)
 **Spørsmål 1**: «Hvilken TV har du?», header «TV», ett valg:
-- «TCL, Sony, Philips, Xiaomi eller Hisense» (Google TV eller Android TV)
-- «Chromecast, Google TV Streamer eller Shield»
-- «Samsung eller LG» (støttes ikke)
-- «Vet ikke» (jeg finner modellen når TV-en er koblet til)
+- **TCL, Sony, Philips, Xiaomi, Hisense** — Google TV / Android TV
+- **Chromecast eller Shield** — TV-boks med Google TV
+- **Samsung eller LG** — støttes ikke
+- **Vet ikke** — jeg finner det ut
 
-Svarer de Samsung eller LG: si at bare reklameblokk via DNS er mulig, tilby det, og stopp resten.
+Samsung eller LG: si at bare reklameblokk via DNS er mulig, tilby det, og stopp resten.
 
-**Spørsmål 2**: «Hva vil du ha på TV-en?», header «Pakke», flere valg (anbefal alle):
-- «Rydde vekk reklame» (slår av reklame- og sporingstjenester, blokkerer reklame-servere, raskere TV)
-- «Egne bilder på skjermsparer» (bilder med sakte zoom og myke overganger)
-- «Ny forside i Apple TV-stil» (med bakgrunnsbilde og skjermdeling fra PC og telefon)
-- «YouTube uten reklame» (SmartTube)
+**Spørsmål 2**: «Hva vil du ha?», header «Pakke», flere valg (anbefal alle):
+- **Fjerne reklame** — raskere TV, mindre sporing
+- **Egen skjermsparer** — dine bilder, med bevegelse
+- **Ny forside** — Apple TV-stil, med skjermdeling
+- **YouTube uten reklame** — via SmartTube
 
-### Runde 2: Wi-Fi (betinget, bare hvis «Ny forside» er valgt)
-**Spørsmål**: «For den nye forsiden må Wi-Fi-nettet lagres på nytt på TV-en. Hvordan vil du gjøre det?», header «Wi-Fi»:
-- «Jeg gir deg passordet» (be om det i chatten etterpå; det lagres aldri)
-- «Jeg kobler til på nytt på TV-en selv»
-- «Dropp ny forside»
+### Runde 2: Wi-Fi (betinget, bare ved «Ny forside»)
+**Spørsmål**: «Wi-Fi må lagres på nytt for ny forside. Hvordan?», header «Wi-Fi»:
+- **Gi deg passordet** — lagres ikke
+- **Gjør det selv på TV-en**
+- **Dropp ny forside**
 
-Still dette først når du har sjekket at setupwraith faktisk eier nettet (tv-vibehack-forside steg 4). Gjør den ikke det, hopp over spørsmålet.
+Still det bare når setupwraith faktisk eier nettet (tv-vibehack-forside steg 4). Be om passordet i chatten etterpå.
 
 ### Runde 3: skjermsparer (betinget, bare hvis valgt)
-**Spørsmål**: «Hvilket tema vil du ha på skjermspareren?», header «Tema», flere valg:
-- «Natur»
-- «Biler»
-- «Ekstremsport»
-- «Egne bilder» (de legger dem i mappen selv)
+**Spørsmål**: «Tema på skjermspareren?», header «Tema», flere valg:
+- **Natur**
+- **Biler**
+- **Ekstremsport**
+- **Egne bilder** — legges i mappen
 
-«Other» er for eget tema (skriv inn). Ukjente navn: søk én gang, og spør ellers om lenke.
+«Other» = eget tema. Ukjente navn: søk én gang, ellers spør om lenke.
 
 ### Runde 4: forside (betinget, bare hvis valgt)
-Hent først installerte apper (`pm list packages -3` + kjente systemapper som Netflix og YouTube) og velg de 4 mest vanlige streamingappene som alternativer.
+Hent først installerte apper (`pm list packages -3` + kjente systemapper som Netflix og YouTube) og bruk de 4 vanligste streamingappene som alternativer.
 
-**Spørsmål 1**: «Hvilke apper bruker du mest? Velg 3 eller 4.», header «Favoritter», flere valg: de 4 appene (navn som på TV-en). «Other» for andre apper. 3 valgt gir 3 store favoritter, 4 gir 4. Rutenettet under har alltid 4 per rad.
+**Spørsmål 1**: «Mest brukte apper? Velg 3–4.», header «Favoritter», flere valg: de 4 appene (navn som på TV-en). 3 valgt = 3 store favoritter, 4 = 4. Rutenettet under har alltid 4 per rad.
 
-**Spørsmål 2**: «Hva vil du ha som bakgrunn på forsiden?», header «Bakgrunn», flere valg:
-- «Bilde fra skjermspareren» (mørkt, så teksten synes)
-- «Dag/natt-himmel» (farge som følger klokka)
-- «Bytt bakgrunn-flis på TV-en» (velg bakgrunn med fjernkontrollen)
-- «Helt svart»
+**Spørsmål 2**: «Bakgrunn på forsiden?», header «Bakgrunn», flere valg:
+- **Bilde** — fra skjermsparer-temaet, mørkt
+- **Dag/natt-himmel** — følger klokka
+- **Bytt bakgrunn-flis** — velg med fjernkontrollen
+- **Svart**
 
-**Spørsmål 3**: «Hvilket språk og hvilken klokke skal forsiden ha?», header «Språk»:
-- «Norsk, klokka viser 15:00» (24-timers)
-- «Norsk, klokka viser 03:00» (12-timers)
-- «Samme som TV-en, klokka viser 15:00» (24-timers)
-- «Samme som TV-en, klokka viser 03:00» (12-timers)
+**Spørsmål 3**: «Språk og klokke?», header «Språk»:
+- **Norsk, 15:00**
+- **Norsk, 03:00**
+- **TV-ens språk, 15:00**
+- **TV-ens språk, 03:00**
 
-Klokka: `adb shell settings put system time_12_24 24` (15:00) eller `12` (03:00, forsiden viser da 3:00 med PM ved siden av). Forsidens klokke og skjermspareren følger systemvalget. Det gjelder hele TV-en, så nevn det i planen. Norsk: tv-vibehack-forside 5c.
+Klokka: `adb shell settings put system time_12_24 24` (15:00) eller `12` (03:00, forsiden viser da 3:00 med PM ved siden av). Det gjelder hele TV-en, så nevn det i planen. Norsk: tv-vibehack-forside 5c.
 
-**Spørsmål 4**: «Hvor skal de ekstra flisene stå (Skjermsparer, YouTube uten reklame, Bytt bakgrunn)?», header «Fliser»:
-- «Først i rutenettet under favorittene» (anbefalt)
-- «Oppe blant favorittene»
+**Spørsmål 4**: «Hvor skal ekstra fliser stå?», header «Fliser»:
+- **Under favorittene** — anbefalt
+- **Blant favorittene**
+
+Ekstra fliser = Skjermsparer, YouTube uten reklame og Bytt bakgrunn (bare de som er valgt).
 
 ### Faste standarder (spør ikke om disse)
 - **Behold alltid:** stemmesøk/Assistant, Chromecast, AirPlay, Miracast, firmware-oppdateringer, mobil-fjernkontroll og USB-avspilling.
 - **Skjermsparer:** 7 sek per bilde + 2 sek overgang, starter etter **5 minutter** (`screen_off_timeout 300000`).
 - **Fargeskjær:** tilpasses automatisk til logoene. Etter at favorittene er satt, ta skjermbilde mens du står på hver favoritt. Gir to av dem nesten samme farge (f.eks. Netflix og YouTube, begge røde), behold den med sterkest merkevarefarge og gi den andre et svart skjær (tv-vibehack-forside 5d). Ellers overstyres ingenting.
 - **Rutenett:** 4 apper per rad under favorittene.
-- **Reklameblokk:** AdGuard DNS og animasjoner 0.5 når «Rydde vekk reklame» er valgt.
+- **Reklameblokk:** AdGuard DNS og animasjoner 0.5 når «Fjerne reklame» er valgt.
 - **Skjermdeling:** følger med «Ny forside» (rad i Kilder).
 
 ### Plan før start
-Vis et kort sammendrag av svarene og standardene, for eksempel: «TCL · rydding + reklameblokk · skjermsparer: biler og ekstremsport, starter etter 5 min · ny forside på norsk, klokka viser 15:00: Stremio, Netflix, YouTube (3 store) · bildebakgrunn + dag/natt + Bytt bakgrunn-flis · YouTube uten reklame · ca. 1–1,5 time». Si samtidig ærlig fra om det som ikke går: Googles «Sponsored»-felt forsvinner bare med ny forside, YouTube-reklame forsvinner bare i SmartTube (vanlig YouTube beholder reklamen), og veldig spesifikke bildeønsker finnes sjelden med fri lisens. Start så uten flere spørsmål.
+Vis et kort sammendrag av svarene og standardene, for eksempel: «TCL · reklame fjernet · skjermsparer: biler og ekstremsport, starter etter 5 min · ny forside på norsk, 15:00: Stremio, Netflix, YouTube (3 store) · bilde + dag/natt + Bytt bakgrunn-flis · YouTube uten reklame · ca. 1–1,5 time». Si samtidig ærlig fra om det som ikke går: Googles «Sponsored»-felt forsvinner bare med ny forside, YouTube-reklame forsvinner bare i SmartTube (vanlig YouTube beholder reklamen), og veldig spesifikke bildeønsker finnes sjelden med fri lisens. Start så uten flere spørsmål.
 
 ## 1. Rekkefølge
 Lag en TaskCreate-liste med stegene for det som er valgt, og huk av underveis.
@@ -96,7 +98,7 @@ Lag en TaskCreate-liste med stegene for det som er valgt, og huk av underveis.
 8. **Angreknapper**: tv-vibehack-forside steg 8, med alle installerte apper i Angre alt.
 9. **Omstart og sluttsjekk** (steg 3 under).
 
-Etter hvert synlige steg: skjermbilde fra TV-en, og test med fjernkontroll-kommandoer. Video i skjermspareren vises svart i skjermbilder, så spør brukeren hva de ser (AskUserQuestion: «Bilder som beveger seg og glir over» / «Det hakker» / «Natur eller annet» / «Svart skjerm»).
+Etter hvert synlige steg: skjermbilde fra TV-en, og test med fjernkontroll-kommandoer. Video i skjermspareren vises svart i skjermbilder, så spør brukeren: «Hva ser du på TV-en?» med **Bilder som glir over** / **Det hakker** / **Natur eller annet** / **Svart skjerm**.
 
 ## 2. SmartTube (YouTube uten reklame)
 Reklamen i vanlig YouTube kommer fra de samme serverne som videoene, så DNS-blokkering hjelper ikke. SmartTube (github.com/yuliskov/SmartTube) er en gratis YouTube-app for Android TV med åpen kildekode, uten reklame og med SponsorBlock. Si nøytralt at den bryter YouTubes vilkår, at Premium er den offisielle veien, og at den kan slutte å virke en periode når YouTube endrer noe.
