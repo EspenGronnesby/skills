@@ -1,6 +1,6 @@
 ---
-name: "tv-skjermsparer"
-description: "Setter opp en Android/Google TV med egen skjermsparer (bilder med zoom og myke overganger) og valgfri rask debloat, styrt fra brukerens Mac via ADB."
+name: tv-skjermsparer
+description: Setter opp egen bildeskjermsparer med bevegelse på Android/Google TV, med valgfri rydding og reklameblokk, styrt fra brukerens Mac.
 ---
 
 # TV-skjermsparer (Android TV / Google TV)
@@ -10,22 +10,39 @@ deres egne tema-bilder som videoer med sakte zoom/panorering og myke overganger,
 på Macen de kan redigere og en knapp (`Oppdater TV.command`) som sender endringer til TV-en.
 Valgfritt: raskere TV og mindre sporing/reklame.
 
-Vil brukeren også ha ny forside i Apple TV-stil, en Skjermsparer-knapp på forsiden eller Skjermdeling i Inputs, gjør denne skillen først og deretter skillen **tv-vibehack-forside**.
+Vil brukeren også ha ny forside i Apple TV-stil, en Skjermsparer-knapp på forsiden eller Skjermdeling i Kilder, gjør denne skillen først og deretter **tv-vibehack-forside**. Vil de ha alt, bruk **tv-full-pakke**.
 
 Brukeren skal ikke gjøre noe teknisk selv utover det som MÅ skje på TV-en (utviklermodus og godkjenning).
 Alt annet gjør du i et skall på brukerens Mac (device_bash eller Desktop Commander `start_process`).
 Snakk enkelt norsk, ett steg om gangen, og fortell hva de skal se etter på TV-skjermen.
 
-## 0. Avklar først (én runde med AskUserQuestion)
+## Ordbruk overfor brukeren
+Tekniske ord hører hjemme i kommandoer og kode, ikke i meldinger og spørsmål. Bruk samme ord i alle tre TV-skillene:
 
-1. **TV-merke og system.** Bare Android TV / Google TV støttes (TCL, Sony, Philips, Xiaomi, Hisense med Google TV, Chromecast/Google TV Streamer, Nvidia Shield). Samsung (Tizen) og LG (webOS) støttes ikke: si det rett ut og tilby bare AdGuard DNS for reklame.
-2. **Tema for bildene** (multiSelect): f.eks. biler/superbiler, drift, ekstremsport (kiting/twintip, surf, ski, motocross, wingsuit), natur, verdensrommet, arkitektur, dyr, egne bilder. La dem skrive egne tema/merker/personer under «Other».
-3. **Egne bilder?** Hvis ja: de kan legge dem i mappen etterpå, eller gi deg en mappe på Macen nå.
-4. **Tempo:** standard er 7 sek per bilde + 2 sek overgang (det testbrukeren likte best). 12 sek ble opplevd som for lenge.
-5. **Når skjermspareren skal starte:** testbrukeren ville ha 1 minutt uten aktivitet.
-6. **Raskere TV / mindre reklame?** (valgfritt, se steg 6). Spør hvilke forhåndsinstallerte apper de IKKE bruker.
+| Si | Ikke si |
+|---|---|
+| forside | launcher, home |
+| favorittene (raden øverst) | dock |
+| knapp | flis, tile |
+| appene under favorittene | rutenett, grid |
+| slå av, rydde vekk | debloat, deaktivere pakker |
+| reklameblokk | DNS, AdGuard (navnet bare hvis de spør) |
+| koblingen til TV-en | ADB, port 5555, videresending |
+| Kilder | Inputs |
+| skjermspareren | Aerial Views, dream |
+| innstillingene for forsiden | tema-overlay, config.json |
+| bygge forsiden på nytt | kompilere, gradle, APK |
 
-Ukjente navn (f.eks. en person eller et merke du ikke finner): søk én gang, spør så brukeren om lenke/Instagram-navn. Ikke gjett.
+Menynavn på TV-en (Utvikleralternativer, USB-feilsøking) skrives som de står på skjermen.
+
+## 0. Avklar først (én runde med AskUserQuestion, korte spørsmål og svar)
+
+1. «Hvilken TV har du?»: **TCL, Sony, Philips, Xiaomi, Hisense** / **Chromecast eller Shield** / **Samsung eller LG** — støttes ikke / **Vet ikke**. Samsung eller LG: si det rett ut og tilby bare reklameblokk.
+2. «Tema på skjermspareren?» (flere valg): **Natur** / **Biler** / **Ekstremsport** / **Egne bilder**. «Other» = eget tema.
+3. «Når skal skjermspareren starte?»: **Etter 1 min** / **Etter 5 min** — anbefalt / **Etter 10 min**.
+4. «Vil du også fjerne reklame?»: **Ja** — raskere TV / **Nei**. Ved ja: spør hvilke forhåndsinstallerte apper de ikke bruker (steg 6).
+
+Tempo er fast: 7 sek per bilde + 2 sek overgang (testbrukeren syntes 12 sek var for lenge). Ukjente navn (f.eks. en person eller et merke du ikke finner): søk én gang, spør så om lenke/Instagram-navn. Ikke gjett.
 
 ## 1. Mac: verktøy
 
@@ -97,7 +114,7 @@ curl -sL -o aerialviews.apk "$URL" && adb install -r aerialviews.apk
 adb shell pm grant com.neilturner.aerialviews android.permission.READ_EXTERNAL_STORAGE
 adb shell settings put secure screensaver_components com.neilturner.aerialviews/.ui.screensaver.DreamActivity
 adb shell appops set com.neilturner.aerialviews APP_AUTO_START allow   # TCL (Android TV 14+: AUTO_START). Uten denne starter skjermspareren aldri.
-adb shell settings put system screen_off_timeout <ms>   # brukerens valg; 60000 (1 min) er testet og virker på TCL G10
+adb shell settings put system screen_off_timeout <ms>   # brukerens valg; 300000 = 5 min. 60000 (1 min) er testet og virker på TCL G10
 ```
 Aerial Views' README sier at verdier under 6 min ikke virker. På TCL G10 / Google TV 12 stemte ikke det: 1 min virket. Det som manglet i første forsøk var APP_AUTO_START. Sjekk på hver TV: sett verdien, ikke rør noe, vent litt lenger enn tiden, og se etter `dumpsys dreams | grep mCurrentDreamName`.
 
@@ -179,7 +196,7 @@ for g, grp in enumerate(groups):
     print(f"video {g+1}/{len(groups)}", flush=True)
 shutil.rmtree(tmp); print("ferdig:", OUT)
 ```
-Videoene deles i grupper på 8, så skjermspareren kan stokke dem og ikke starter likt hver gang. Juster SHOW/FADE etter brukerens tempo-svar. Ca. 9 sek rendering per bilde på Apple Silicon (75 bilder ≈ 10 min). Kjører du Oppdater-knappen fra skallet ditt, poll `~/tv-skjermsparer-verktoy/videoer` for fremdrift og gi brukeren en statuslinje hvis de spør.
+Videoene deles i grupper på 8, så skjermspareren kan stokke dem og ikke starter likt hver gang. Ca. 9 sek rendering per bilde på Apple Silicon (75 bilder ≈ 10 min). Kjører du Oppdater-knappen fra skallet ditt, poll `~/tv-skjermsparer-verktoy/videoer` for fremdrift og gi brukeren en statuslinje hvis de spør.
 
 ### Oppdater-knappen
 `Oppdater TV.command` i brukerens mappe (`chmod +x`). Fyll inn TV-IP:
@@ -208,7 +225,7 @@ Uten media-scan-broadcasten finner skjermspareren 0 filer. Kjør knappen selv f�
 `LES MEG.txt`: legg bilder i undermappene (nye mapper blir også med) → dobbeltklikk Oppdater TV → vent ca. 10 min til det står Ferdig. Liggende bilder ser best ut. Første gang kan macOS spørre om Terminal får bruke lokalnettet: svar ja.
 
 ### Verifiser
-Start med `am start -n com.android.systemui/.Somnambulator` eller appens testknapp (hovedmeny → DPAD_DOWN ×2 → DPAD_CENTER). Video vises som svart i `screencap`, så spør brukeren med AskUserQuestion hva de ser (bilder som beveger seg og glir over / hakker / natur / svart). Natur = en nettkilde står fortsatt på. Hakking = 4x-oppskaleringen mangler. Avslutt med BACK og HOME.
+Start med `am start -n com.android.systemui/.Somnambulator` eller appens testknapp (hovedmeny → DPAD_DOWN ×2 → DPAD_CENTER). Video vises som svart i `screencap`, så spør: «Hva ser du på TV-en?» med **Bilder som glir** / **Det hakker** / **Natur** / **Svart**. Natur = en nettkilde står fortsatt på. Hakking = 4x-oppskaleringen mangler. Avslutt med BACK og HOME.
 
 ## 6. Valgfritt: raskere TV og mindre reklame (forsiden skal se lik ut)
 
@@ -225,4 +242,4 @@ Start med `am start -n com.android.systemui/.Somnambulator` eller appens testkna
 - Omstart: `adb reboot` henger via videresendingen. Kjør den i bakgrunnen, vent 70 sek til port 5555 svarer, og koble til på nytt (godkjenningen huskes).
 - Etter omstart: sjekk at `screensaver_components`, `private_dns_specifier`, `screen_off_timeout` og antall deaktiverte pakker sitter.
 - Stopp videresendingen (`pkill -f fwd.py`) og `adb disconnect`.
-- Kort oppsummering til brukeren: hva skjermspareren viser, tempo, når den starter, hvor mappen ligger og hvordan knappen brukes, hva som ble slått av (og at alt kan reverseres), og hva som ikke lot seg gjøre.
+- Kort oppsummering til brukeren: hva skjermspareren viser, når den starter, hvor mappen ligger og hvordan knappen brukes, hva som ble slått av (og at alt kan angres), og hva som ikke lot seg gjøre.
