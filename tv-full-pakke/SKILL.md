@@ -62,12 +62,12 @@ Hent først installerte apper (`pm list packages -3` + kjente systemapper som Ne
 - «Helt svart»
 
 **Spørsmål 3**: «Hvilket språk og hvilken klokke skal forsiden ha?», header «Språk»:
-- «Norsk, 24-timers klokke» (16:30)
-- «Norsk, 12-timers klokke» (4:30 PM)
-- «Samme som TV-en, 24-timers klokke»
-- «Samme som TV-en, 12-timers klokke»
+- «Norsk, klokka viser 15:00» (24-timers)
+- «Norsk, klokka viser 03:00» (12-timers)
+- «Samme som TV-en, klokka viser 15:00» (24-timers)
+- «Samme som TV-en, klokka viser 03:00» (12-timers)
 
-Klokka: `adb shell settings put system time_12_24 24` (eller `12`). Forsidens klokke og skjermspareren følger systemvalget. Det gjelder hele TV-en, så nevn det i planen. Norsk: tv-vibehack-forside 5c.
+Klokka: `adb shell settings put system time_12_24 24` (15:00) eller `12` (03:00, forsiden viser da 3:00 med PM ved siden av). Forsidens klokke og skjermspareren følger systemvalget. Det gjelder hele TV-en, så nevn det i planen. Norsk: tv-vibehack-forside 5c.
 
 **Spørsmål 4**: «Hvor skal de ekstra flisene stå (Skjermsparer, YouTube uten reklame, Bytt bakgrunn)?», header «Fliser»:
 - «Først i rutenettet under favorittene» (anbefalt)
@@ -82,7 +82,7 @@ Klokka: `adb shell settings put system time_12_24 24` (eller `12`). Forsidens kl
 - **Skjermdeling:** følger med «Ny forside» (rad i Kilder).
 
 ### Plan før start
-Vis et kort sammendrag av svarene og standardene, for eksempel: «TCL · rydding + reklameblokk · skjermsparer: biler og ekstremsport, starter etter 5 min · ny forside på norsk med 24-timers klokke: Stremio, Netflix, YouTube (3 store) · bildebakgrunn + dag/natt + Bytt bakgrunn-flis · YouTube uten reklame · ca. 1–1,5 time». Si samtidig ærlig fra om det som ikke går: Googles «Sponsored»-felt forsvinner bare med ny forside, YouTube-reklame forsvinner bare i SmartTube (vanlig YouTube beholder reklamen), og veldig spesifikke bildeønsker finnes sjelden med fri lisens. Start så uten flere spørsmål.
+Vis et kort sammendrag av svarene og standardene, for eksempel: «TCL · rydding + reklameblokk · skjermsparer: biler og ekstremsport, starter etter 5 min · ny forside på norsk, klokka viser 15:00: Stremio, Netflix, YouTube (3 store) · bildebakgrunn + dag/natt + Bytt bakgrunn-flis · YouTube uten reklame · ca. 1–1,5 time». Si samtidig ærlig fra om det som ikke går: Googles «Sponsored»-felt forsvinner bare med ny forside, YouTube-reklame forsvinner bare i SmartTube (vanlig YouTube beholder reklamen), og veldig spesifikke bildeønsker finnes sjelden med fri lisens. Start så uten flere spørsmål.
 
 ## 1. Rekkefølge
 Lag en TaskCreate-liste med stegene for det som er valgt, og huk av underveis.
