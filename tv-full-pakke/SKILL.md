@@ -9,11 +9,13 @@ Mål: brukeren får hele oppsettet i én økt: en ryddet og raskere Android/Goog
 
 Denne skillen er en dirigent. Den kjører de andre skillene i riktig rekkefølge og samler spørsmålene:
 - **tv-skjermsparer**: oppkobling, skjermsparer, bildemappe, valgfri lett rydding og AdGuard DNS.
-- **tv-vibehack-forside**: CleanYourTV-forsiden, Wi-Fi-fellen, favoritter, bakgrunn, språk, fliser og angreknapper.
+- **tv-vibehack-forside**: CleanYourTV-forsiden, Wi-Fi-fellen, favoritter, bakgrunn, språk, ekstra knapper og angreknapper.
 
 Les begge SKILL.md før du starter, og følg dem for detaljene. Spørsmålene i de to skillene erstattes av spørsmålene og standardene her. Er en av dem ikke installert, si fra og hent den fra github.com/EspenGronnesby/skills.
 
 Krav: Mac, Android TV / Google TV (ikke Samsung eller LG), Claude koblet til Macen, TV og Mac på samme Wi-Fi. Det tar ca. 1–1,5 time, mest venting på videoer og bygging.
+
+**Ordbruk overfor brukeren:** si «knapp» om ruter på forsiden (Skjermsparer-knapp, Bytt bakgrunn-knapp), aldri «flis». «Favoritter» er appene i båndet øverst.
 
 ## 0. Spørsmålene: still dem ORDRETT, hver gang
 Alle brukere skal få de samme, korte spørsmålene. Bruk AskUserQuestion med nøyaktig denne teksten. Format per alternativ: **label** — beskrivelse (beskrivelsen legges i `description`). Ikke legg til, fjern eller omformuler. «Other» (skriv selv) kommer automatisk. Hopp bare over spørsmål som er merket betinget.
@@ -53,12 +55,12 @@ Still det bare når setupwraith faktisk eier nettet (tv-vibehack-forside steg 4)
 ### Runde 4: forside (betinget, bare hvis valgt)
 Hent først installerte apper (`pm list packages -3` + kjente systemapper som Netflix og YouTube) og bruk de 4 vanligste streamingappene som alternativer.
 
-**Spørsmål 1**: «Mest brukte apper? Velg 3–4.», header «Favoritter», flere valg: de 4 appene (navn som på TV-en). 3 valgt = 3 store favoritter, 4 = 4. Rutenettet under har alltid 4 per rad.
+**Spørsmål 1**: «Mest brukte apper? Velg 3–4.», header «Favoritter», flere valg: de 4 appene (navn som på TV-en). 3 valgt = 3 store favoritter, 4 = 4. Appene under favorittene står alltid 4 per rad.
 
 **Spørsmål 2**: «Bakgrunn på forsiden?», header «Bakgrunn», flere valg:
 - **Bilde** — fra skjermsparer-temaet, mørkt
 - **Dag/natt-himmel** — følger klokka
-- **Bytt bakgrunn-flis** — velg med fjernkontrollen
+- **Bytt bakgrunn-knapp** — velg med fjernkontrollen
 - **Svart**
 
 **Spørsmål 3**: «Språk og klokke?», header «Språk»:
@@ -69,22 +71,22 @@ Hent først installerte apper (`pm list packages -3` + kjente systemapper som Ne
 
 Klokka: `adb shell settings put system time_12_24 24` (15:00) eller `12` (03:00, forsiden viser da 3:00 med PM ved siden av). Det gjelder hele TV-en, så nevn det i planen. Norsk: tv-vibehack-forside 5c.
 
-**Spørsmål 4**: «Hvor skal ekstra fliser stå?», header «Fliser»:
+**Spørsmål 4**: «Hvor skal de ekstra knappene stå?», header «Knapper»:
 - **Under favorittene** — anbefalt
 - **Blant favorittene**
 
-Ekstra fliser = Skjermsparer, YouTube uten reklame og Bytt bakgrunn (bare de som er valgt).
+Ekstra knapper = Skjermsparer, YouTube uten reklame og Bytt bakgrunn (bare de som er valgt).
 
 ### Faste standarder (spør ikke om disse)
 - **Behold alltid:** stemmesøk/Assistant, Chromecast, AirPlay, Miracast, firmware-oppdateringer, mobil-fjernkontroll og USB-avspilling.
 - **Skjermsparer:** 7 sek per bilde + 2 sek overgang, starter etter **5 minutter** (`screen_off_timeout 300000`).
 - **Fargeskjær:** tilpasses automatisk til logoene. Etter at favorittene er satt, ta skjermbilde mens du står på hver favoritt. Gir to av dem nesten samme farge (f.eks. Netflix og YouTube, begge røde), behold den med sterkest merkevarefarge og gi den andre et svart skjær (tv-vibehack-forside 5d). Ellers overstyres ingenting.
-- **Rutenett:** 4 apper per rad under favorittene.
+- **Under favorittene:** 4 apper per rad.
 - **Reklameblokk:** AdGuard DNS og animasjoner 0.5 når «Fjerne reklame» er valgt.
 - **Skjermdeling:** følger med «Ny forside» (rad i Kilder).
 
 ### Plan før start
-Vis et kort sammendrag av svarene og standardene, for eksempel: «TCL · reklame fjernet · skjermsparer: biler og ekstremsport, starter etter 5 min · ny forside på norsk, 15:00: Stremio, Netflix, YouTube (3 store) · bilde + dag/natt + Bytt bakgrunn-flis · YouTube uten reklame · ca. 1–1,5 time». Si samtidig ærlig fra om det som ikke går: Googles «Sponsored»-felt forsvinner bare med ny forside, YouTube-reklame forsvinner bare i SmartTube (vanlig YouTube beholder reklamen), og veldig spesifikke bildeønsker finnes sjelden med fri lisens. Start så uten flere spørsmål.
+Vis et kort sammendrag av svarene og standardene, for eksempel: «TCL · reklame fjernet · skjermsparer: biler og ekstremsport, starter etter 5 min · ny forside på norsk, 15:00: Stremio, Netflix, YouTube (3 store) · bilde + dag/natt + Bytt bakgrunn-knapp · YouTube uten reklame · ca. 1–1,5 time». Si samtidig ærlig fra om det som ikke går: Googles «Sponsored»-felt forsvinner bare med ny forside, YouTube-reklame forsvinner bare i SmartTube (vanlig YouTube beholder reklamen), og veldig spesifikke bildeønsker finnes sjelden med fri lisens. Start så uten flere spørsmål.
 
 ## 1. Rekkefølge
 Lag en TaskCreate-liste med stegene for det som er valgt, og huk av underveis.
@@ -93,7 +95,7 @@ Lag en TaskCreate-liste med stegene for det som er valgt, og huk av underveis.
 3. **Rydding og reklameblokk**: med ny forside, bruk CleanYourTV-listen (tv-vibehack-forside steg 3) og legg AdGuard DNS og animasjoner fra tv-skjermsparer steg 6 oppå. Uten ny forside, bruk tv-skjermsparer steg 6. Ikke kjør begge på de samme pakkene.
 4. **Skjermsparer**: tv-skjermsparer steg 4–5 med standardene over (Aerial Views, alle fire nettkilder AV, bilder fra Wikimedia med kontaktark-sjekk, mappe, videoer i 4x, Oppdater TV-knapp).
 5. **Wi-Fi og forside**: Wi-Fi-spørsmålet om nødvendig, deretter tv-vibehack-forside steg 4–5 (5a ved 3 favoritter, 5b, 5c ved norsk, 5d etter fargeregelen), og klokkevalget.
-6. **Ekstra apper og fliser**: tv-vibehack-forside steg 6 (Skjermsparer-flis hvis skjermsparer er valgt, Skjermdeling alltid med ny forside, Bytt bakgrunn hvis valgt) og SmartTube (steg 2 under).
+6. **Ekstra apper og knapper**: tv-vibehack-forside steg 6 (Skjermsparer-knapp hvis skjermsparer er valgt, Skjermdeling alltid med ny forside, Bytt bakgrunn-knapp hvis valgt) og SmartTube (steg 2 under).
 7. **Tema-mappe**: tv-vibehack-forside steg 7, med bakgrunner fra skjermsparer-temaet.
 8. **Angreknapper**: tv-vibehack-forside steg 8, med alle installerte apper i Angre alt.
 9. **Omstart og sluttsjekk** (steg 3 under).
