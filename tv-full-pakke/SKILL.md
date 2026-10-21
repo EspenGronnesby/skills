@@ -34,11 +34,36 @@ Tekniske ord hører hjemme i kommandoer og kode, ikke i meldinger og spørsmål.
 
 Menynavn på TV-en (Utvikleralternativer, USB-feilsøking) skrives som de står på skjermen.
 
+## Mapper: én mappe per TV
+Første spørsmål avgjør hvor alt havner, så flere TV-er kan styres fra samme Mac uten å skrive over hverandre. Reglene her overstyrer stiene i de to andre skillene.
+
+| | Min egen | Noen andre (`<Navn>`) |
+|---|---|---|
+| Mapper brukeren ser | `~/Desktop/Privat/TV-skjermsparer`, `TV-forside` og `TV-oppsett` | `~/Desktop/Privat/TV-er/<Navn>/` med `Skjermsparer`, `Forside` og `Angre` |
+| Verktøyfiler (videoer, lister, backup) | som i de andre skillene | `~/tv-verktoy/<navn>/` |
+| Forside-kode | `~/Desktop/Utvikling/tv-vibehack` | kopi: `~/Desktop/Utvikling/tv-vibehack-<navn>` |
+
+Finnes ikke `Privat/`, bruk `~/Desktop/` i stedet.
+
+- Finnes mappen fra før, spør: «Samme TV som sist?» med **Ja, oppdater** / **Nei, ny TV**. Ny TV får `-2` bak navnet.
+- Lag `TV-info.txt` i personens mappe: navn, modell, IP, Wi-Fi-navn (aldri passord), dato og hva som ble gjort.
+- `fwd.py` og `lag_video.py` deles, og `fwd.py` tar TV-IP som argument. Port 5556 peker på én TV om gangen, så hver knapp starter med `pkill -f fwd.py` og starter den på nytt med sin egen TV-IP. Aldri `pgrep … ||`, for da kan knappen koble seg til forrige TV.
+- IP-en kan endre seg. Svarer ikke TV-en, skann nettet og sammenlign `ro.serialno` med TV-info.txt.
+- Forside-kopi: `rsync -a --exclude build --exclude .gradle tv-vibehack/ tv-vibehack-<navn>/`, og endre `config.xml` der. De ekstra appene (Skjermsparer, Bytt bakgrunn) installeres som de er.
+- Ryddingen lagrer før-tilstanden i `~/.cleanyourtv/recovery-<IP>-<liste>.json`. To TV-er på ulike nett kan ha samme IP. Flytt derfor en eksisterende fil med samme IP til `~/tv-verktoy/<eier>/` før du rydder, og kopier den nye til `~/tv-verktoy/<navn>/` etterpå. Angre alt legger riktig fil tilbake før `restore.sh`.
+- Si til eieren av TV-en: knappene virker bare når Macen er på samme Wi-Fi som TV-en, altså hjemme hos dem. «Tillat alltid» betyr at denne Macen kan koble til TV-en senere på det nettet. Det kan trekkes tilbake ved å slå av USB-feilsøking.
+
 ## 0. Spørsmålene: still dem ORDRETT, hver gang
 Alle brukere skal få de samme, korte spørsmålene. Bruk AskUserQuestion med nøyaktig denne teksten. Format per alternativ: **label** — beskrivelse (beskrivelsen legges i `description`; uten tankestrek = ingen beskrivelse). Ikke legg til, fjern eller omformuler. «Other» (skriv selv) kommer automatisk. Hopp bare over spørsmål som er merket betinget.
 
 ### Runde 1 (ett AskUserQuestion-kall)
-**Spørsmål 1**: «Hvilken TV har du?», header «TV», ett valg:
+**Spørsmål 1**: «Hvem sin TV er det? Skriv navnet hvis det er noen andre.», header «Hvem», ett valg:
+- **Min egen**
+- **Noen andre**
+
+Navn skrevet i «Other» = mappenavnet. «Noen andre» uten navn: spør «Hva heter personen?» i chatten. Se «Mapper» over.
+
+**Spørsmål 2**: «Hvilken TV er det?», header «TV», ett valg:
 - **TCL, Sony, Philips, Xiaomi, Hisense**
 - **Chromecast eller Shield**
 - **Samsung eller LG** — støttes ikke
@@ -46,7 +71,7 @@ Alle brukere skal få de samme, korte spørsmålene. Bruk AskUserQuestion med n�
 
 Samsung eller LG: si at bare reklameblokk er mulig, tilby det, og stopp resten. Vet ikke: les modellen når TV-en er koblet til.
 
-**Spørsmål 2**: «Hva vil du ha?», header «Pakke», flere valg (anbefal alle):
+**Spørsmål 3**: «Hva vil du ha?», header «Pakke», flere valg (anbefal alle):
 - **Fjern reklame** — raskere TV
 - **Egen skjermsparer** — dine bilder
 - **Ny forside** — med skjermdeling
@@ -103,7 +128,7 @@ Ekstra knapper = Skjermsparer, YouTube uten reklame og Bytt bakgrunn (bare de so
 - **Skjermdeling:** følger med «Ny forside» (rad i Kilder).
 
 ### Plan før start
-Vis et kort sammendrag av svarene og standardene, for eksempel: «TCL · reklame fjernet · skjermsparer: biler og ekstremsport, starter etter 5 min · ny forside på norsk, 15:00: Stremio, Netflix, YouTube (3 store) · bilde + dag/natt + Bytt bakgrunn-knapp · YouTube uten reklame · ca. 1–1,5 time». Si samtidig ærlig fra om det som ikke går: Googles «Sponsored»-felt forsvinner bare med ny forside, YouTube-reklame forsvinner bare i SmartTube (vanlig YouTube beholder reklamen), og veldig spesifikke bildeønsker finnes sjelden med fri lisens. Start så uten flere spørsmål.
+Vis et kort sammendrag av svarene og standardene, for eksempel: «Kari (TV-er/Kari) · TCL · reklame fjernet · skjermsparer: biler og ekstremsport, starter etter 5 min · ny forside på norsk, 15:00: Stremio, Netflix, YouTube (3 store) · bilde + dag/natt + Bytt bakgrunn-knapp · YouTube uten reklame · ca. 1–1,5 time». Si samtidig ærlig fra om det som ikke går: Googles «Sponsored»-felt forsvinner bare med ny forside, YouTube-reklame forsvinner bare i SmartTube (vanlig YouTube beholder reklamen), og veldig spesifikke bildeønsker finnes sjelden med fri lisens. Start så uten flere spørsmål.
 
 ## 1. Rekkefølge
 Lag en TaskCreate-liste med stegene for det som er valgt, og huk av underveis. Bruk vanlige ord i oppgavenavnene (f.eks. «Koble til TV-en», «Rydde vekk reklame», «Lage skjermsparer»).
@@ -132,4 +157,4 @@ Legg `org.smarttube.stable` i `grid_first_apps` (eller `dock_apps`) etter svaret
 ## 3. Sluttsjekk og overlevering
 - Omstart via bakgrunnsjobb (`adb reboot` henger via fwd.py). Koble til igjen, og sjekk HOME, `screensaver_components`, `screen_off_timeout` (300000), `time_12_24`, `private_dns_specifier`, deaktiverte pakker og at temaet ligger der.
 - Koblingen til TV-en: forklar at knappene på Macen slutter å virke hvis USB-feilsøking slås av, og la brukeren velge.
-- Kort sluttmelding: hva som er på TV-en nå, de tre mappene på Macen (**TV-skjermsparer** med Oppdater TV, **TV-forside** med Bruk tema, **TV-oppsett** med angreknappene), innlogging i SmartTube, og hva som ikke ble testet eller ikke gikk.
+- Kort sluttmelding: hva som er på TV-en nå, mappene på Macen (Skjermsparer med Oppdater TV, Forside med Bruk tema, og angreknappene; stier etter «Mapper»), innlogging i SmartTube, og hva som ikke ble testet eller ikke gikk.
