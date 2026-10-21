@@ -8,6 +8,7 @@ renskrevet, slik at neste gang går rett frem.
 
 | Skill | Hva den gjør | Krever |
 |---|---|---|
+| [tv-full-pakke](tv-full-pakke/SKILL.md) | **Hele pakken i én runde:** spør om alt først, og kjører så tv-skjermsparer og tv-vibehack-forside i riktig rekkefølge, pluss SmartTube (YouTube uten reklame), skjermdeling og angreknapper. Start her hvis du vil ha alt. | Som tv-vibehack-forside |
 | [tv-skjermsparer](tv-skjermsparer/SKILL.md) | Setter opp en Android/Google TV med egen skjermsparer: dine tema-bilder som video med sakte zoom og myke overganger, en mappe du redigerer og en «Oppdater TV»-knapp. Valgfritt: raskere TV og mindre reklame. | Mac, Android TV / Google TV, Claude koblet til datamaskinen |
 | [tv-vibehack-forside](tv-vibehack-forside/SKILL.md) | Bytter Google TV-forsiden med [CleanYourTV](https://github.com/Gathin23/cleanyourtv) i Apple TV-stil, bygget etter dine svar: favoritter (3 store eller 4), rutenett, bakgrunnsbilde med velger på TV-en, dag/natt-himmel, låst språk, fargeskjær per app, Skjermsparer- og Skjermdeling-knapper, og knapper for å angre. Bygger videre på tv-skjermsparer. | Som over, pluss Java 17 og Android SDK (installeres av skillen) |
 
