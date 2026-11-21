@@ -1,0 +1,16 @@
+# Python 3.11 or 3.12 recommended
+numpy>=1.26
+scipy
+librosa>=0.10
+soundfile
+mido
+pretty_midi
+resampy
+scikit-learn
+mir_eval
+onnxruntime
+pedalboard>=0.9
+torch
+torchaudio
+demucs>=4.0
+# basic-pitch is installed separately with --no-deps (its pins break on new Python/numpy)
