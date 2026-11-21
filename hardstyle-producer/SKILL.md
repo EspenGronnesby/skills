@@ -1,13 +1,14 @@
 ---
 name: hardstyle-producer
-description: Gjør en opplastet sang (MP3/WAV) om til en ferdig hardstyle-remiks for FL Studio - stems, analyse, MIDI, euphoric + rawstyle drop, arrangement med vokal i nytt tempo og importguide. Bruk når Espen laster opp en låt og vil ha en hardstyle/rawstyle-remiks eller FL Studio-filer av den.
+description: Gjør en opplastet låt (MP3/WAV) om til en hardstyle-remiks som ferdig organisert FL Studio-prosjekt (.flp) med stems, MIDI, euphoric + rawstyle drop og vokal i nytt tempo. Bruk når Espen laster opp en låt og vil ha en hardstyle/rawstyle-remiks eller FL Studio-filer av den.
 ---
 
 # hardstyle-producer
 
-Mål: Espen laster opp en låt og får en mappe han importerer i FL Studio med `File > Import > MIDI file`:
-hele arrangementet som MIDI (én kanal per del, markører per seksjon), vokalen strukket til nytt tempo og plassert,
-enkeltdeler som MIDI, og en importguide. Første gang testet på MAGIC! - Rude (144 BPM, Db-dur -> 150 BPM).
+Mål: Espen laster opp en låt og får en mappe i `Desktop\Fl studio\<Låtnavn>_Remix\` med et FL Studio-prosjekt han
+bare åpner: ett mønster per instrument per seksjon, ett navngitt spor per instrument, markører, riktig tempo.
+I tillegg vokalen strukket til nytt tempo og plassert, alle deler som MIDI, og en guide.
+Første gang testet på MAGIC! - Rude (144 BPM, Db-dur -> 150 BPM).
 
 Snakk norsk, kort og konkret. Programnavn, kommandoer og filnavn på engelsk. Han er nybegynner i produksjon.
 
@@ -50,8 +51,6 @@ python3 -m hsp chord-check -p $P         # akkord + bass per takt -> forslag til
 
 ```bash
 python3 -m hsp plan-arrangement -p $P --progression <forslag> --bars-per-chord 1 --anchor-bar <N> --seed 2
-python3 -m hsp prepare-fl-studio -p $P
-python3 -m hsp preview -p $P
 ```
 `--anchor-bar` gjør at akkordene under den flyttede vokalen starter der de gjorde i originalen. Uten den kolliderer vokal og akkorder.
 
@@ -112,4 +111,4 @@ Gå videre ett steg om gangen. Be om skjermbilde når du trenger å se noe.
 
 ## Avslutt
 Si kort på norsk: BPM, toneart, progresjon, seksjonene og hvor vokalen ligger, hva som er usikkert, og at filene ligger i mappen.
-Neste steg er importen i FL (steg 6).
+Neste steg er å åpne .flp-filen i FL (steg 6).
