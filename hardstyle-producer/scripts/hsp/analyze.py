@@ -341,7 +341,14 @@ def analyze(audio: Path, stems_dir: Path | None = None) -> dict:
     duration = len(y) / SR
     tempo = estimate_tempo(y)
     tracked = np.array(tempo["beat_times"])
-    g = fit_grid(y, tempo["candidates"][0]["bpm"] if tempo["candidates"] else tempo["bpm"])
+    bpm0 = tempo["candidates"][0]["bpm"] if tempo["candidates"] else tempo["bpm"]
+    # dance music lives in 80-185 BPM: a 60 BPM peak is almost always the half-time of 120 (Dezko - Ascend)
+    while bpm0 < 80:
+        bpm0 *= 2
+    while bpm0 > 185:
+        bpm0 /= 2
+    tempo["octave_corrected_from"] = tempo["candidates"][0]["bpm"] if tempo["candidates"] else None
+    g = fit_grid(y, bpm0)
     tempo["bpm"] = round(g["bpm"], 2)
     tempo["bpm_rounded"] = int(round(g["bpm"]))
     tempo["half_time"] = round(g["bpm"] / 2, 2)

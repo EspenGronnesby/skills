@@ -10,7 +10,7 @@ from __future__ import annotations
 import struct
 from pathlib import Path
 
-from .flp import (FLP, Event, ID_ARR_NEW, ID_CHAN_NAME, ID_CHAN_NEW, ID_PAT_COLOR, ID_PAT_NAME, ID_PAT_NEW,
+from .flp import (FLP, Event, ID_ARR_NEW, ID_CHAN_COLOR, ID_CHAN_NAME, ID_CHAN_NEW, ID_PAT_COLOR, ID_PAT_NAME, ID_PAT_NEW,
                   ID_PAT_NOTES, ID_PL_ITEMS, ID_TRACK_DATA, ID_TRACK_NAME, unpack_notes)
 from .midi_io import Note
 
@@ -23,11 +23,92 @@ DEFAULT_COLOR = 0x808080
 
 # pattern-block event ids that belong to a pattern (between its 65 event and the next block)
 PAT_NOTE_BLOCK = {223, 224, 226}
-PAT_PROP_BLOCK = {193, 150, 157, 158}
+PAT_PROP_BLOCK = {193, 150, 157, 158, 164, 52, 171, 252, 253}  # FL 26: name, color, ... (seen in real files)
 
 
 def _color(name: str) -> int:
     return TRACK_COLORS.get(name.lower(), DEFAULT_COLOR)
+
+
+TEMPLATES = Path(__file__).resolve().parents[2] / "templates"
+
+
+def _utf16(text: str) -> bytes:
+    return (text + "\x00").encode("utf-16-le")
+
+
+def add_channels(f: FLP, specs: list[dict]) -> dict[str, int]:
+    """Append sampler / audio-clip channels cloned from real FL 26 channel blocks (templates/*.flpsnip).
+    spec: {"name", "kind": "sampler"|"audio", "path": absolute Windows path, "color": int (optional)}.
+    Each gets its own mixer insert after the highest one in use. Returns name -> rack index."""
+    ev = f.events
+    idx = [e.value for e in ev if e.id == ID_CHAN_NEW]
+    next_ch = (max(idx) + 1) if idx else 0
+    inserts = [e.value for e in ev if e.id == 104]
+    next_ins = (max(inserts) + 1) if inserts else 1
+    at = next(i for i, e in enumerate(ev) if e.id == ID_ARR_NEW)
+    snips = {"sampler": FLP.read(TEMPLATES / "sampler_channel.flpsnip").events,
+             "audio": FLP.read(TEMPLATES / "audio_channel.flpsnip").events}
+    new, out = [], {}
+    for sp in specs:
+        if sp["name"] in out:
+            continue
+        for e in snips[sp["kind"]]:
+            if e.id == ID_CHAN_NEW:
+                e = Event(ID_CHAN_NEW, struct.pack("<H", next_ch))
+            elif e.id == ID_CHAN_NAME:
+                e = Event(ID_CHAN_NAME, _utf16(sp["name"]))
+            elif e.id == 196:
+                e = Event(196, _utf16(sp["path"]))
+            elif e.id == ID_CHAN_COLOR:
+                e = Event(ID_CHAN_COLOR, struct.pack("<I", sp.get("color", _color(sp["name"]))))
+            elif e.id == 104:
+                e = Event(104, struct.pack("<H", next_ins))
+            else:
+                e = Event(e.id, e.data, e.raw_len)
+            new.append(e)
+        out[sp["name"]] = next_ch
+        next_ch += 1
+        next_ins += 1
+    ev[at:at] = new
+    f.n_channels = next_ch
+    return out
+
+
+def drop_channels(f: FLP, names: set[str]) -> list[str]:
+    """Remove template channels by name (e.g. a FLEX 'Kick' that a sampler 'Kick' replaces) and renumber
+    the rest. Only safe before patterns are written (build() strips patterns afterwards anyway)."""
+    ev = f.events
+    starts = [i for i, e in enumerate(ev) if e.id == ID_CHAN_NEW]
+    arr = next(i for i, e in enumerate(ev) if e.id == ID_ARR_NEW)
+    ends = starts[1:] + [arr]
+    remove, removed = [], []
+    for a, b in zip(starts, ends):
+        name = next((ev[j].text() for j in range(a, b) if ev[j].id == ID_CHAN_NAME), "")
+        if name in names:
+            # a channel block may have pattern blocks interleaved after it; only drop channel events
+            j = a + 1
+            while j < b and ev[j].id not in (ID_PAT_NEW,):
+                j += 1
+            remove.append((a, j))
+            removed.append(name)
+    for a, j in reversed(remove):
+        del ev[a:j]
+    k = 0
+    for i, e in enumerate(ev):
+        if e.id == ID_CHAN_NEW:
+            ev[i] = Event(ID_CHAN_NEW, struct.pack("<H", k))
+            k += 1
+    f.n_channels = k
+    return removed
+
+
+def audio_item(position: int, channel: int, length: int, track: int, clip_id: int) -> bytes:
+    """Audio clip on the playlist (FL 26, 88 bytes, copied from a real clip): idx = channel index."""
+    b = bytearray((TEMPLATES / "audio_clip_item.bin").read_bytes())
+    struct.pack_into("<IHHIHH", b, 0, position, PATTERN_BASE, channel, length, 499 - track, 0)
+    struct.pack_into("<I", b, 32, clip_id)
+    return bytes(b)
 
 
 def channels(f: FLP) -> dict[str, int]:
@@ -135,10 +216,19 @@ def _rewrite_markers(ev: list[Event], sections: list[dict], ppq: int) -> list[Ev
 
 
 def build(template_flp: Path, out_flp: Path, tracks: dict[str, list[Note]], sections: list[dict],
-          split_sections: bool = True, bpm: float | None = None) -> dict:
-    """tracks: instrument name -> notes in beats from song bar 1. sections: [{name,start_bar,length_bars}]."""
+          split_sections: bool = True, bpm: float | None = None,
+          samplers: list[dict] | None = None, audio_clips: list[dict] | None = None) -> dict:
+    """tracks: instrument name -> notes in beats from song bar 1. sections: [{name,start_bar,length_bars}].
+    samplers: [{"name", "path"}] -> sampler channels with the user's sample (notes in `tracks` under that name).
+    audio_clips: [{"name", "path", "start_bar", "seconds"}] -> audio clip channel + clip on its own track."""
     f = FLP.read(template_flp)
     ppq = f.ppq
+    extra = [dict(s, kind="sampler") for s in (samplers or [])] + [dict(a, kind="audio") for a in (audio_clips or [])]
+    # remove template channels that this song does not use, and those a sampler replaces
+    unused = {n for n in channels(f) if n not in tracks}
+    drop_channels(f, unused | {x["name"] for x in extra})
+    if extra:
+        add_channels(f, extra)
     chans = channels(f)
     missing = [t for t in tracks if t not in chans]
     if missing:
@@ -155,10 +245,12 @@ def build(template_flp: Path, out_flp: Path, tracks: dict[str, list[Note]], sect
         note_at = next(i for i, e in enumerate(ev) if e.id == ID_CHAN_NEW)
         prop_at = next(i for i, e in enumerate(ev) if e.id == ID_ARR_NEW)
 
-    order = [t for t in tracks]                 # Playlist track order = instrument order
+    order = [t for t in tracks] + [a["name"] for a in (audio_clips or []) if a["name"] not in tracks]
     note_blocks, prop_blocks, items, summary = [], [], [], []
     pat = 0
     for ti, name in enumerate(order):
+        if name not in tracks:
+            continue                      # audio-clip track: no patterns
         notes = tracks[name]
         spans = ([(s["name"], (s["start_bar"] - 1) * 4, s["length_bars"] * 4) for s in sections]
                  if split_sections else [("", 0, max((n.end for n in notes), default=0))])
@@ -182,9 +274,20 @@ def build(template_flp: Path, out_flp: Path, tracks: dict[str, list[Note]], sect
     ev[note_at:note_at] = note_blocks
     # playlist items of the (first) arrangement
     ai = next(i for i, e in enumerate(ev) if e.id == ID_PL_ITEMS)
+    for a in audio_clips or []:
+        tr = order.index(a["name"])
+        length = int(round(a["seconds"] * (bpm or 150) / 60 * ppq))
+        items.append((int((a["start_bar"] - 1) * 4 * ppq), ("audio", chans[a["name"]]), length, tr))
+        summary.append({"pattern": None, "name": a["name"] + " (lyd)", "track": tr + 1,
+                        "start_bar": a["start_bar"], "bars": round(length / ppq / 4, 1), "notes": 0})
     items.sort(key=lambda x: (x[0], x[3]))
-    ev[ai] = Event(ID_PL_ITEMS, b"".join(pack_item(pos, pt, ln, tr, cid + 1)
-                                         for cid, (pos, pt, ln, tr) in enumerate(items)))
+    blobs = []
+    for cid, (pos, pt, ln, tr) in enumerate(items):
+        if isinstance(pt, tuple):
+            blobs.append(audio_item(pos, pt[1], ln, tr, cid + 1))
+        else:
+            blobs.append(pack_item(pos, pt, ln, tr, cid + 1))
+    ev[ai] = Event(ID_PL_ITEMS, b"".join(blobs))
     # track names + colours. FL order per track: 238 (data), 43, [239 name]
     newev, k, pending = [], 0, None
     for e in ev:

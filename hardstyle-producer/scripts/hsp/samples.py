@@ -10,6 +10,8 @@ AUDIO_EXT = {".wav", ".aif", ".aiff", ".flac", ".mp3", ".ogg"}
 PRESET_EXT = {".fst", ".nmsv", ".fxp", ".fxb", ".flp", ".mid"}
 
 ROLES = {  # role -> keywords matched against path (folder + filename), checked in order
+    "zaag": ["zaag", "uptempo"],
+    "kick_roll": ["kick roll", "kick_roll", "kickroll"],
     "kick": ["kick", "bd", "bassdrum"],
     "kick_tail": ["tail"],
     "clap": ["clap"],
@@ -17,7 +19,7 @@ ROLES = {  # role -> keywords matched against path (folder + filename), checked 
     "hat": ["hat", "hihat", "hh", "ride", "cymbal", "crash"],
     "screech": ["screech", "screeches"],
     "lead": ["lead", "supersaw", "saw"],
-    "riser": ["riser", "rise", "uplifter", "sweep up", "upsweep"],
+    "riser": ["riser", "rise", "uplifter", "sweep up", "upsweep", "build up", "buildup", "build-up"],
     "downlifter": ["downlifter", "downsweep", "fall"],
     "impact": ["impact", "hit", "boom", "sub drop", "subdrop"],
     "reverse": ["reverse", "rev "],
@@ -42,15 +44,26 @@ def classify(path: Path) -> list[str]:
     return roles or ["other"]
 
 
+_KEY_TOKEN = re.compile(r"(?:^|[_\s\-\(\[])([A-G](?:#|b|s(?=[_\s\-m]))?)(m|min|minor|maj|major)?(?=$|[_\s\-\)\]])")
+
+
 def parse_meta(name: str) -> dict:
+    """BPM + key from a sample filename. Handles F#, G#m, Emin, Fm, 'F#_Female', 'Gmin_High' ..."""
     meta = {}
-    m = BPM_RE.search(name)
-    if m:
-        meta["bpm"] = int(m.group(1))
-    stem = Path(name).stem.replace("_", " ").replace("-", " ")
-    for tok in re.findall(r"\b([A-G](?:#|b)?)(m|min|maj|major|minor)?\b", stem):
-        if tok[0]:
-            meta["key"] = tok[0] + (" minor" if tok[1].lower() in ("m", "min", "minor") else (" major" if tok[1] else ""))
+    stem = Path(name).stem
+    m = BPM_RE.search(stem)
+    cands = [int(m.group(1))] if m else [int(x) for x in re.findall(r"(?:^|_)(\d{2,3})(?=_)", stem)]
+    cands = [c for c in cands if 60 <= c <= 260]
+    if cands:
+        meta["bpm"] = cands[0]
+    keys = []
+    for km in _KEY_TOKEN.finditer(stem):
+        root, q = km.group(1), (km.group(2) or "")
+        if root.endswith("s"):
+            root = root[:-1] + "#"
+        keys.append(root + (" minor" if q.lower() in ("m", "min", "minor") else (" major" if q else "")))
+    if keys:
+        meta["key"] = keys[-1] if len(keys) > 1 and keys[-1].endswith(("minor", "major")) else keys[0]
     return meta
 
 

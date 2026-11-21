@@ -94,14 +94,27 @@ Gå videre ett steg om gangen. Be om skjermbilde når du trenger å se noe.
 
 ## Hans oppsett (verifisert 21.11.2026)
 - Windows-PC `espen`, FL Studio (trolig 26.1.7), FL sin Stem extractor installert, FLEX-pakker Euphoria + Essential Pianos.
-- Verifisert kick: `Documents\Image-Line\Downloads\FL CLOUD Sounds\hardstyle-bangers-hy2\HHB_Kick_Oneshot_Infinity_01_F_4662008.fldownload.wav`
-  (i F, transponer til låtens grunntone). On Point Samples er ikke koblet til ennå. Foreslå aldri filnavn som ikke er verifisert.
+- Lydbibliotek: FL Cloud-nedlastinger i `Documents\Image-Line\Downloads\FL CLOUD Sounds\` (243 lyder/68 pakker per 21.11.2026:
+  rawstyle-force-sin, uptempo-hardcore-2-sin, hardcore-raver-sin, amsterdam-hard-dance-sin, born-for-hardstyle ...).
+  `.fldownload.wav` kan være TOM (HHB_Kick_Oneshot_Infinity_01_F er stille, -180 dB): mål alltid nivå før bruk.
+  Foreslå aldri filnavn som ikke er verifisert.
+
+## Full produksjon med samples (stil «cinematic_raw_zaag», testet på Dezko - Ascend)
+`hsp/production.py` + `hsp/produce_cli.py`: seksjonsplan (Cinematic Intro, Breakdown, Build-up, Euphoric Drop, Transition,
+Build-up 2, Rawstyle Drop, Zaag 200 BPM), MIDI per del, sampler-kanaler med hans filer (stemt/strukket kopier i
+`samples\edited`, originaler urørt), egne syntetiserte lyder for hull (`hsp/sounddesign.py`: screech, clap, impact,
+riser, cinematic pad, rot C5) og vokalen som lydklipp. Hent hans filer med `device_stage_files`, mål lengde/toneart,
+velg per rolle (kick i låtens grunntone, looper med riktig BPM), kjør `produce(...)` (se references/production_example.py
+). Tempohopp (f.eks. 160->200) må han legge inn selv med en tempo-automasjon;
+gi nøyaktige steg. Sjekk at alle filstier i .flp finnes på PC-en etter levering.
 
 ## Fallgruver
 - **Alt i ett mønster «arrangement»**: det skjer ved MIDI-import av én flersporsfil. Løst med `build-flp`, som skriver .flp
   direkte. FL 26-detaljer i `hsp/flp.py` + `hsp/flp_organize.py`: hendelse 172 er 3 byte, Playlist-klipp er 88 byte,
   sporets navn (239) kommer etter hendelse 43, tempo = 156 (BPM×1000). Hendelse 223 i importerte mønstre er tempo-automasjon
   og skal ikke kopieres. Prosjektet kjører 96 PPQ, så notelengder rundes til nærmeste tick (< 1 ms).
+- **Tempo halvert/doblet**: Ascend ble lest som 60 BPM; regel nå: under 80 dobles, over 185 halveres. Sjekk alltid at
+  akkordbyttene blir hele takter.
 - **MIDI forskjøvet 3 slag** når låten har lang intro: rettet i koden (beat 0 = første downbeat). Regresjonstest finnes i `tests/selftest.py`.
 - **Offbeat-hi-hats og offbeat-bass** kan lure taktgridet. Koden tester både på slag og offbeat. Sjekk `downbeat.confidence` < 0.1.
 - **Pitchet kick ødelegger akkordlesing** på full miks. Akkorder leses derfor fra stems.
